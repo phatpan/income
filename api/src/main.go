@@ -1,9 +1,6 @@
 package main
 
-import (
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
-)
+import mgo "gopkg.in/mgo.v2"
 
 var (
 	Mongo_session    *mgo.Session
@@ -18,6 +15,11 @@ const (
 	DATABASE_COLLECTION_REVENUE = "revenue"
 )
 
+type Expense struct {
+	Amount      string `json:"amount"`
+	Description string `json:"description"`
+}
+
 func main() {
 	mongo_session, err := mgo.Dial(DATABASE_SERVER)
 	if err != nil {
@@ -29,7 +31,17 @@ func main() {
 	Users_collection = mongo_session.DB(DATABASE_NAME).C(DATABASE_COLLECTION_EXPENSE)
 	defer Mongo_session.Close()
 
-	err = Users_collection.Insert(bson.M{
-		"amount": "1000",
-	})
+	expense := Expense{
+		Amount:      "500",
+		Description: "ค่าเดินทาง",
+	}
+	expense.SaveToDB()
+}
+
+func (e *Expense) SaveToDB() error {
+	err := Users_collection.Insert(&e)
+	if err != nil {
+		return err
+	}
+	return nil
 }
