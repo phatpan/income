@@ -1,6 +1,10 @@
 package main
 
-import mgo "gopkg.in/mgo.v2"
+import (
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+	mgo "gopkg.in/mgo.v2"
+)
 
 var (
 	Mongo_session    *mgo.Session
@@ -31,11 +35,25 @@ func main() {
 	Users_collection = mongo_session.DB(DATABASE_NAME).C(DATABASE_COLLECTION_EXPENSE)
 	defer Mongo_session.Close()
 
+	e := echo.New()
+	e.Use(middleware.Logger())
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{echo.GET, echo.PUT, echo.POST, echo.DELETE},
+	}))
+	e.POST("/expense", createExpense)
+	e.Logger.Fatal(e.Start(API_SERVER))
+
 	expense := Expense{
 		Amount:      "500",
 		Description: "ค่าเดินทาง",
 	}
 	expense.SaveToDB()
+}
+
+func createExpense(c echo.Context) error {
+
 }
 
 func (e *Expense) SaveToDB() error {
